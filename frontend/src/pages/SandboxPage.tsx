@@ -174,14 +174,14 @@ export default function SandboxPage() {
 
   if (!plan || !preferences) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground text-lg font-medium">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-(--background)">
+        <div className="text-(--muted-foreground) text-lg font-medium">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-(--background)">
       {/* Header */}
       <Card className="rounded-none border-x-0 border-t-0">
         <CardHeader className="pb-4">
@@ -194,7 +194,7 @@ export default function SandboxPage() {
             </div>
             <div className="flex items-center gap-3">
               {saveMessage && (
-                <div className={`text-sm font-semibold px-3 py-1.5 rounded-lg ${saveMessage.includes('Error') ? 'text-destructive bg-destructive/10' : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'}`}>
+                <div className={`text-sm font-semibold px-3 py-1.5 rounded-lg ${saveMessage.includes('Error') ? 'text-(--destructive) bg-(--destructive)/10' : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'}`}>
                   {saveMessage}
                 </div>
               )}

@@ -70,13 +70,13 @@ export default function CalendarGrid({
         <table className="min-w-full border-collapse">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-card border border-border p-3 text-left font-bold">
+              <th className="sticky left-0 z-10 bg-(--card) border border-(--border) p-3 text-left font-bold">
                 Time
               </th>
               {days.map((day) => (
                 <th
                   key={day.day}
-                  className="min-w-[200px] border border-border p-4 bg-muted/50 text-center font-bold"
+                  className="min-w-50 border border-(--border) p-4 bg-(--muted)/50 text-center font-bold"
                 >
                   <div className="text-lg">Day {day.day}</div>
                   {day.date && (
@@ -89,7 +89,7 @@ export default function CalendarGrid({
           <tbody>
             {timeSlots.map((timeSlot) => (
               <tr key={timeSlot}>
-                <td className="sticky left-0 z-10 bg-card border border-border p-3 text-sm font-semibold">
+                <td className="sticky left-0 z-10 bg-(--card) border border-(--border) p-3 text-sm font-semibold">
                   {timeSlot}
                 </td>
                 {days.map((day) => {
@@ -101,16 +101,16 @@ export default function CalendarGrid({
                   return (
                     <td
                       key={`${day.day}-${timeSlot}`}
-                      className={`min-h-[80px] border border-border p-3 relative ${
+                      className={`min-h-20 border border-(--border) p-3 relative ${
                         isDraggedOver
-                          ? 'bg-primary/10 border-primary border-2 shadow-lg'
-                          : 'bg-background hover:bg-muted/50'
+                          ? 'bg-(--primary)/10 border-(--primary) border-2 shadow-lg'
+                          : 'bg-(--background) hover:bg-(--muted)/50'
                       } transition-all duration-200`}
                       onDragOver={(e) => handleDragOver(e, day.day, timeSlot)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, day.day, timeSlot)}
                     >
-                      <div className="flex flex-col gap-2 min-h-[60px]">
+                      <div className="flex flex-col gap-2 min-h-15">
                         {cellItems.map((item) => (
                           <div key={item.id}>
                             {gridItemRenderer(item, day.day)}

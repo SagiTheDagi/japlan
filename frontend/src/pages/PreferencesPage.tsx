@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { UserPreferences } from '../types';
 import { Button } from '@/components/ui/button';
@@ -8,109 +7,78 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-const hobbyOptions = [
-  'Temples & Shrines',
-  'Museums & Art',
-  'Nature & Parks',
-  'Food & Dining',
-  'Shopping',
-  'Nightlife',
-  'Technology',
-  'History & Culture',
-  'Photography',
-  'Anime & Manga',
+// --- Constants ---
+const HOBBY_OPTIONS = [
+  'Temples & Shrines', 'Museums & Art', 'Nature & Parks', 'Food & Dining',
+  'Shopping', 'Nightlife', 'Technology', 'History & Culture',
+  'Photography', 'Anime & Manga',
 ];
 
-const dietaryRestrictions = [
-  'Vegetarian',
-  'Vegan',
-  'Pescatarian',
-  'Halal',
-  'Kosher',
-  'Gluten-Free',
-  'No Pork',
-  'No Beef',
+const DIETARY_RESTRICTIONS = [
+  'Vegetarian', 'Vegan', 'Pescatarian', 'Halal',
+  'Kosher', 'Gluten-Free', 'No Pork', 'No Beef',
 ];
 
-const cuisinePreferences = [
-  'Sushi',
-  'Ramen',
-  'Tempura',
-  'Yakiniku',
-  'Kaiseki',
-  'Okonomiyaki',
-  'Street Food',
-  'Western',
-  'Chinese',
-  'Korean',
+const CUISINE_PREFERENCES = [
+  'Sushi', 'Ramen', 'Tempura', 'Yakiniku', 'Kaiseki',
+  'Okonomiyaki', 'Street Food', 'Western', 'Chinese', 'Korean',
 ];
 
-const travelStyles = [
-  { value: 'relaxed', label: 'Relaxed' },
-  { value: 'adventurous', label: 'Adventurous' },
-  { value: 'balanced', label: 'Balanced' },
-  { value: 'cultural', label: 'Cultural' },
-  { value: 'foodie', label: 'Foodie' },
+const TRAVEL_STYLES = [
+  { value: 'relaxed', label: 'Relaxed', color: 'bg-purple-600 hover:bg-purple-700' },
+  { value: 'adventurous', label: 'Adventurous', color: 'bg-purple-600 hover:bg-purple-700' },
+  { value: 'balanced', label: 'Balanced', color: 'bg-purple-600 hover:bg-purple-700' },
+  { value: 'cultural', label: 'Cultural', color: 'bg-purple-600 hover:bg-purple-700' },
+  { value: 'foodie', label: 'Foodie', color: 'bg-purple-600 hover:bg-purple-700' },
 ] as const;
+
+// --- Initial State Helper ---
+// Defining this avoids "undefined" checks throughout the code
+const INITIAL_STATE: UserPreferences = {
+  hobbies: [],
+  foodPreferences: {
+    dietaryRestrictions: [],
+    cuisinePreferences: [],
+  },
+  budgetRange: { min: 0, max: 500 },
+  tripDuration: 7,
+  travelStyle: 'balanced',
+};
 
 export default function PreferencesPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<Partial<UserPreferences>>({
-    hobbies: [],
-    foodPreferences: {
-      dietaryRestrictions: [],
-      cuisinePreferences: [],
-    },
-    budgetRange: {
-      min: 0,
-      max: 500,
-    },
-    tripDuration: 7,
-    travelStyle: 'balanced',
-  });
+  const [formData, setFormData] = useState<UserPreferences>(INITIAL_STATE);
+
+  // Generic array toggle helper
+  const toggleItem = (currentList: string[], item: string) => {
+    return currentList.includes(item)
+      ? currentList.filter((i) => i !== item)
+      : [...currentList, item];
+  };
 
   const handleHobbyToggle = (hobby: string) => {
-    setFormData((prev) => {
-      const hobbies = prev.hobbies || [];
-      const newHobbies = hobbies.includes(hobby)
-        ? hobbies.filter((h) => h !== hobby)
-        : [...hobbies, hobby];
-      return { ...prev, hobbies: newHobbies };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      hobbies: toggleItem(prev.hobbies, hobby),
+    }));
   };
 
-  const handleDietaryToggle = (restriction: string) => {
-    setFormData((prev) => {
-      const restrictions = prev.foodPreferences?.dietaryRestrictions || [];
-      const newRestrictions = restrictions.includes(restriction)
-        ? restrictions.filter((r) => r !== restriction)
-        : [...restrictions, restriction];
-      return {
-        ...prev,
-        foodPreferences: {
-          ...prev.foodPreferences,
-          dietaryRestrictions: newRestrictions,
-          cuisinePreferences: prev.foodPreferences?.cuisinePreferences || [],
-        },
-      };
-    });
+  const handleFoodPreferenceToggle = (type: 'dietaryRestrictions' | 'cuisinePreferences', value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      foodPreferences: {
+        ...prev.foodPreferences,
+        [type]: toggleItem(prev.foodPreferences[type], value),
+      },
+    }));
   };
 
-  const handleCuisineToggle = (cuisine: string) => {
-    setFormData((prev) => {
-      const cuisines = prev.foodPreferences?.cuisinePreferences || [];
-      const newCuisines = cuisines.includes(cuisine)
-        ? cuisines.filter((c) => c !== cuisine)
-        : [...cuisines, cuisine];
-      return {
-        ...prev,
-        foodPreferences: {
-          ...prev.foodPreferences,
-          dietaryRestrictions: prev.foodPreferences?.dietaryRestrictions || [],
-          cuisinePreferences: newCuisines,
-        },
-      };
-    });
+  const handleBudgetChange = (field: 'min' | 'max', value: string) => {
+    const numValue = parseInt(value) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      budgetRange: { ...prev.budgetRange, [field]: numValue },
+    }));
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -120,9 +88,9 @@ export default function PreferencesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-background via-muted to-muted/50 py-12 px-4">
+    <div className="min-h-screen bg-linear-to-br from-background via-(--muted) to-(--muted)/50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <Card className="border-2">
+        <Card className="border-2 shadow-sm">
           <CardHeader>
             <CardTitle className="text-4xl md:text-5xl">Plan Your Japan Trip</CardTitle>
             <CardDescription className="text-lg">
@@ -131,24 +99,29 @@ export default function PreferencesPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
+              
               {/* Hobbies Section */}
               <div className="space-y-4">
                 <Label className="text-xl font-semibold">What are your interests?</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {hobbyOptions.map((hobby) => (
-                    <Button
-                      key={hobby}
-                      type="button"
-                      variant={formData.hobbies?.includes(hobby) ? "default" : "outline"}
-                      onClick={() => handleHobbyToggle(hobby)}
-                      className={cn(
-                        "h-auto py-3",
-                        formData.hobbies?.includes(hobby) && "bg-primary"
-                      )}
-                    >
-                      {hobby}
-                    </Button>
-                  ))}
+                  {HOBBY_OPTIONS.map((hobby) => {
+                    const isSelected = formData.hobbies.includes(hobby);
+                    return (
+                      <Button
+                        key={hobby}
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        onClick={() => handleHobbyToggle(hobby)}
+                        aria-pressed={isSelected}
+                        className={cn(
+                          "h-auto py-3 transition-all",
+                          isSelected && "bg-blue-600 hover:bg-blue-700 text-(--primary-foreground)"
+                        )}
+                      >
+                        {hobby}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -157,96 +130,88 @@ export default function PreferencesPage() {
                 <div className="space-y-4">
                   <Label className="text-xl font-semibold">Dietary Restrictions</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {dietaryRestrictions.map((restriction) => (
-                      <Button
-                        key={restriction}
-                        type="button"
-                        variant={formData.foodPreferences?.dietaryRestrictions?.includes(restriction) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleDietaryToggle(restriction)}
-                        className={cn(
-                          "h-auto py-2.5",
-                          formData.foodPreferences?.dietaryRestrictions?.includes(restriction) && "bg-green-600 hover:bg-green-700"
-                        )}
-                      >
-                        {restriction}
-                      </Button>
-                    ))}
+                    {DIETARY_RESTRICTIONS.map((restriction) => {
+                      const isSelected = formData.foodPreferences.dietaryRestrictions.includes(restriction);
+                      return (
+                        <Button
+                          key={restriction}
+                          type="button"
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleFoodPreferenceToggle('dietaryRestrictions', restriction)}
+                          aria-pressed={isSelected}
+                          className={cn(
+                            "h-auto py-2.5",
+                            isSelected && "bg-green-600 hover:bg-green-700 text-white"
+                          )}
+                        >
+                          {restriction}
+                        </Button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <Label className="text-xl font-semibold">Cuisine Preferences</Label>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    {cuisinePreferences.map((cuisine) => (
-                      <Button
-                        key={cuisine}
-                        type="button"
-                        variant={formData.foodPreferences?.cuisinePreferences?.includes(cuisine) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleCuisineToggle(cuisine)}
-                        className={cn(
-                          "h-auto py-2.5",
-                          formData.foodPreferences?.cuisinePreferences?.includes(cuisine) && "bg-orange-600 hover:bg-orange-700"
-                        )}
-                      >
-                        {cuisine}
-                      </Button>
-                    ))}
+                    {CUISINE_PREFERENCES.map((cuisine) => {
+                      const isSelected = formData.foodPreferences.cuisinePreferences.includes(cuisine);
+                      return (
+                        <Button
+                          key={cuisine}
+                          type="button"
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleFoodPreferenceToggle('cuisinePreferences', cuisine)}
+                          aria-pressed={isSelected}
+                          className={cn(
+                            "h-auto py-2.5",
+                            isSelected && "bg-orange-600 hover:bg-orange-700 text-white"
+                          )}
+                        >
+                          {cuisine}
+                        </Button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
               {/* Budget Range */}
               <div className="space-y-4">
-                <Label className="text-xl font-semibold">Daily Budget (USD)</Label>
+                <Label htmlFor="budget-min" className="text-xl font-semibold">Daily Budget (USD)</Label>
                 <div className="flex items-center gap-4">
                   <Input
+                    id="budget-min"
                     type="number"
                     min="0"
-                    value={formData.budgetRange?.min || 0}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        budgetRange: {
-                          min: parseInt(e.target.value) || 0,
-                          max: prev.budgetRange?.max || 500,
-                        },
-                      }))
-                    }
+                    value={formData.budgetRange.min}
+                    onChange={(e) => handleBudgetChange('min', e.target.value)}
+                    placeholder="Min"
                   />
-                  <span className="text-muted-foreground font-medium">to</span>
+                  <span className="text-(--muted-foreground) font-medium">to</span>
                   <Input
+                    id="budget-max"
                     type="number"
                     min="0"
-                    value={formData.budgetRange?.max || 500}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        budgetRange: {
-                          min: prev.budgetRange?.min || 0,
-                          max: parseInt(e.target.value) || 500,
-                        },
-                      }))
-                    }
+                    value={formData.budgetRange.max}
+                    onChange={(e) => handleBudgetChange('max', e.target.value)}
+                    placeholder="Max"
                   />
                 </div>
               </div>
 
               {/* Trip Duration */}
               <div className="space-y-4">
-                <Label className="text-xl font-semibold">Trip Duration (days)</Label>
+                <Label htmlFor="duration" className="text-xl font-semibold">Trip Duration (days)</Label>
                 <Input
+                  id="duration"
                   type="number"
                   min="1"
                   max="30"
-                  value={formData.tripDuration || 7}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      tripDuration: parseInt(e.target.value) || 7,
-                    }))
-                  }
+                  value={formData.tripDuration}
+                  onChange={(e) => setFormData(prev => ({ ...prev, tripDuration: parseInt(e.target.value) || 1 }))}
                   className="w-32"
                 />
               </div>
@@ -255,31 +220,30 @@ export default function PreferencesPage() {
               <div className="space-y-4">
                 <Label className="text-xl font-semibold">Travel Style</Label>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {travelStyles.map((style) => (
-                    <Button
-                      key={style.value}
-                      type="button"
-                      variant={formData.travelStyle === style.value ? "default" : "outline"}
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          travelStyle: style.value,
-                        }))
-                      }
-                      className={cn(
-                        "h-auto py-3",
-                        formData.travelStyle === style.value && "bg-purple-600 hover:bg-purple-700"
-                      )}
-                    >
-                      {style.label}
-                    </Button>
-                  ))}
+                  {TRAVEL_STYLES.map((style) => {
+                    const isSelected = formData.travelStyle === style.value;
+                    return (
+                      <Button
+                        key={style.value}
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        onClick={() => setFormData(prev => ({ ...prev, travelStyle: style.value }))}
+                        aria-pressed={isSelected}
+                        className={cn(
+                          "h-auto py-3",
+                          isSelected && style.color
+                        )}
+                      >
+                        {style.label}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Submit Button */}
               <div className="pt-6">
-                <Button type="submit" size="lg" className="w-full">
+                <Button type="submit" size="lg" className="w-full text-lg font-semibold bg-(--primary)">
                   Start Planning Your Trip →
                 </Button>
               </div>
