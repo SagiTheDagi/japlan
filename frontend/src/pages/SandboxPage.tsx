@@ -9,6 +9,7 @@ import { sampleActivities, sampleRestaurants } from '../data/sampleData';
 import { api } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sun, Moon } from 'lucide-react';
 
 export default function SandboxPage() {
   const navigate = useNavigate();
@@ -16,9 +17,36 @@ export default function SandboxPage() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    // Load preferences from localStorage
+    const isDark = localStorage.theme === 'dark' || 
+      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    setIsDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => {
+      const newMode = !prev;
+      if (newMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      }
+      return newMode;
+    });
+  };
+
+  useEffect(() => {
     const savedPreferences = localStorage.getItem('userPreferences');
     const savedPlanId = localStorage.getItem('savedPlanId');
     
@@ -27,18 +55,15 @@ export default function SandboxPage() {
         const prefs = JSON.parse(savedPreferences);
         setPreferences(prefs);
         
-        // Try to load existing plan from backend
         if (savedPlanId) {
           api.getPlan(savedPlanId)
             .then((loadedPlan) => {
               setPlan(loadedPlan);
             })
             .catch(() => {
-              // If plan doesn't exist, create new one
               initializeNewPlan(prefs);
             });
         } else {
-          // Initialize new plan with calendar days
           initializeNewPlan(prefs);
         }
       } catch (error) {
@@ -71,10 +96,8 @@ export default function SandboxPage() {
 
       const updatedDays = prevPlan.days.map((d) => {
         if (d.day === day) {
-          // Check if item already exists (prevent duplicates)
           const existingItem = d.items.find((i) => i.id === item.id);
           if (existingItem) {
-            // Update existing item's time slot
             return {
               ...d,
               items: d.items.map((i) =>
@@ -82,7 +105,6 @@ export default function SandboxPage() {
               ),
             };
           }
-          // Add new item
           return {
             ...d,
             items: [...d.items, item],
@@ -132,10 +154,8 @@ export default function SandboxPage() {
       let savedPlan: Plan;
 
       if (savedPlanId && plan.id) {
-        // Update existing plan
         savedPlan = await api.updatePlan(savedPlanId, plan);
       } else {
-        // Create new plan
         savedPlan = await api.createPlan(plan);
         localStorage.setItem('savedPlanId', savedPlan.id || '');
       }
@@ -198,6 +218,15 @@ export default function SandboxPage() {
                   {saveMessage}
                 </div>
               )}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleTheme}
+                title="Toggle theme"
+              >
+                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
+
               <Button variant="outline" onClick={() => navigate('/')}>
                 Edit Preferences
               </Button>
@@ -209,15 +238,12 @@ export default function SandboxPage() {
         </CardHeader>
       </Card>
 
-      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Block Palette */}
         <BlockPalette
           activities={sampleActivities}
           restaurants={sampleRestaurants}
         />
 
-        {/* Calendar Grid */}
         <div className="flex-1 overflow-auto">
           <CalendarGrid
             days={plan.days}
@@ -230,4 +256,3 @@ export default function SandboxPage() {
     </div>
   );
 }
-
