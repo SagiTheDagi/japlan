@@ -1,10 +1,12 @@
 package database
 
 import (
-	"encoding/json"
+	"fmt"
 	"japlan-backend/internal/models"
+	"time"
 
-	"gorm.io/driver/sqlite"
+	// Use the "glebarez" driver instead of the default "gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite" 
 	"gorm.io/gorm"
 )
 
@@ -13,45 +15,38 @@ var DB *gorm.DB
 // InitDatabase initializes the SQLite database and runs migrations
 func InitDatabase() error {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("japlan.db"), &gorm.Config{})
+	// The DSN remains the same for SQLite
+	dsn := "japlan.db?_pragma=foreign_keys(1)"
+	
+	// Open connection using the pure-Go driver
+	DB, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Optimize connection settings
+	sqlDB, err := DB.DB()
+	if err == nil {
+		sqlDB.SetMaxOpenConns(1)
+		sqlDB.SetMaxIdleConns(1)
+		sqlDB.SetConnMaxLifetime(time.Hour)
 	}
 
 	// Auto-migrate the schema
 	err = DB.AutoMigrate(&models.Plan{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	return nil
 }
 
-// SavePlan saves a plan to the database
+// --- Helper Functions for your Handlers ---
+
 func SavePlan(plan *models.Plan) error {
-	// Convert CalendarDay array to JSON for storage
-	daysJSON, err := json.Marshal(plan.Days)
-	if err != nil {
-		return err
-	}
-
-	// For simplicity, we'll store days as JSON in a text field
-	// In a production system, you might want to normalize this further
-	planData := map[string]interface{}{
-		"days": string(daysJSON),
-	}
-
-	// Update the plan with the JSON data
-	if err := DB.Save(plan).Error; err != nil {
-		return err
-	}
-
-	// Store the days JSON separately (we'll use a custom approach)
-	// For now, we'll store everything in the Preferences field or create a separate field
-	return nil
+	return DB.Save(plan).Error
 }
 
-// GetPlan retrieves a plan by ID
 func GetPlan(id uint) (*models.Plan, error) {
 	var plan models.Plan
 	if err := DB.First(&plan, id).Error; err != nil {
@@ -60,7 +55,6 @@ func GetPlan(id uint) (*models.Plan, error) {
 	return &plan, nil
 }
 
-// GetPlansByUser retrieves all plans for a user
 func GetPlansByUser(userID string) ([]models.Plan, error) {
 	var plans []models.Plan
 	if err := DB.Where("user_id = ?", userID).Find(&plans).Error; err != nil {
@@ -69,13 +63,17 @@ func GetPlansByUser(userID string) ([]models.Plan, error) {
 	return plans, nil
 }
 
-// UpdatePlan updates an existing plan
 func UpdatePlan(plan *models.Plan) error {
 	return DB.Save(plan).Error
 }
 
-// DeletePlan deletes a plan by ID
 func DeletePlan(id uint) error {
-	return DB.Delete(&models.Plan{}, id).Error
+	result := DB.Delete(&models.Plan{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
-
