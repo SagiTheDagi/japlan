@@ -60,17 +60,60 @@ export default function SandboxPage() {
     if (savedPreferences) {
       try {
         const prefs = JSON.parse(savedPreferences);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:62',message:'Loading preferences',data:{tripDuration:prefs.tripDuration,savedPlanId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         setPreferences(prefs);
         
         if (savedPlanId) {
           api.getPlan(savedPlanId)
             .then((loadedPlan) => {
-              setPlan(loadedPlan);
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:70',message:'Loaded plan from API',data:{planDays:loadedPlan.days?.length,planTripDuration:loadedPlan.preferences?.tripDuration,currentTripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+              // #endregion
+              // Update plan with current preferences and adjust days if trip duration changed
+              const currentTripDuration = prefs.tripDuration || 7;
+              const planTripDuration = loadedPlan.preferences?.tripDuration || 7;
+              
+              if (currentTripDuration !== planTripDuration || loadedPlan.days.length !== currentTripDuration) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:77',message:'Trip duration mismatch, updating plan days',data:{currentTripDuration,planTripDuration,currentDays:loadedPlan.days.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                // #endregion
+                // Adjust days array to match current trip duration
+                let updatedDays = [...loadedPlan.days];
+                if (currentTripDuration > updatedDays.length) {
+                  // Add more days
+                  for (let i = updatedDays.length; i < currentTripDuration; i++) {
+                    updatedDays.push({ day: i + 1, items: [] });
+                  }
+                } else if (currentTripDuration < updatedDays.length) {
+                  // Remove extra days (keep items from removed days for now, or remove them)
+                  updatedDays = updatedDays.slice(0, currentTripDuration);
+                }
+                
+                setPlan({
+                  ...loadedPlan,
+                  preferences: prefs,
+                  days: updatedDays,
+                });
+              } else {
+                // Just update preferences
+                setPlan({
+                  ...loadedPlan,
+                  preferences: prefs,
+                });
+              }
             })
             .catch(() => {
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:100',message:'Plan load failed, initializing new',data:{tripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
               initializeNewPlan(prefs);
             });
         } else {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:105',message:'No saved plan, initializing new',data:{tripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
           initializeNewPlan(prefs);
         }
       } catch (error) {
@@ -84,10 +127,16 @@ export default function SandboxPage() {
 
   const initializeNewPlan = (prefs: UserPreferences) => {
     const tripDuration = prefs.tripDuration || 7;
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:88',message:'initializeNewPlan called',data:{tripDuration,prefsTripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     const days: CalendarDay[] = Array.from({ length: tripDuration }, (_, i) => ({
       day: i + 1,
       items: [],
     }));
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:95',message:'Setting plan with days',data:{daysLength:days.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
 
     setPlan({
       preferences: prefs,
