@@ -80,6 +80,7 @@ func (d *PlanDays) Scan(value interface{}) error {
 // Plan represents a complete trip plan
 type Plan struct {
 	ID          uint            `json:"id" gorm:"primaryKey"`
+	Name        string          `json:"name" gorm:"type:varchar(255);uniqueIndex"`
 	UserID      *string         `json:"userId,omitempty"`
 	Preferences UserPreferences `json:"preferences" gorm:"type:text"`
 	Days        PlanDays        `json:"days" gorm:"type:text"`

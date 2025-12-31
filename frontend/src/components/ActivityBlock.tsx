@@ -49,7 +49,7 @@ export default function ActivityBlock({
             <h3 className="font-semibold text-sm mb-1 line-clamp-1">
               {activity.name}
             </h3>
-            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+            <p className="text-xs text-(--muted-foreground) mb-2 line-clamp-2">
               {activity.description}
             </p>
             <div className="flex items-center gap-2 flex-wrap">

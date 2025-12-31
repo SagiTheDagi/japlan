@@ -6,7 +6,7 @@ import (
 	"time"
 
 	// Use the "glebarez" driver instead of the default "gorm.io/driver/sqlite"
-	"github.com/glebarez/sqlite" 
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -76,4 +76,26 @@ func DeletePlan(id uint) error {
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+// GetPlanByName retrieves a plan by name
+func GetPlanByName(name string) (*models.Plan, error) {
+	var plan models.Plan
+	if err := DB.Where("name = ?", name).First(&plan).Error; err != nil {
+		return nil, err
+	}
+	return &plan, nil
+}
+
+// GetAllPlanNames retrieves all plan names
+func GetAllPlanNames() ([]string, error) {
+	var plans []models.Plan
+	if err := DB.Select("name").Find(&plans).Error; err != nil {
+		return nil, err
+	}
+	names := make([]string, len(plans))
+	for i, plan := range plans {
+		names[i] = plan.Name
+	}
+	return names, nil
 }

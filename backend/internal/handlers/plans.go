@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreatePlan creates a new plan
+// CreatePlan creates a new plan or updates if name already exists
 func CreatePlan(c *gin.Context) {
 	var plan models.Plan
 	if err := c.ShouldBindJSON(&plan); err != nil {
@@ -18,6 +18,22 @@ func CreatePlan(c *gin.Context) {
 		return
 	}
 
+	// If plan has a name, check if it already exists
+	if plan.Name != "" {
+		existingPlan, err := database.GetPlanByName(plan.Name)
+		if err == nil && existingPlan != nil {
+			// Plan with this name exists, update it
+			plan.ID = existingPlan.ID
+			if err := database.DB.Save(&plan).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, plan)
+			return
+		}
+	}
+
+	// Create new plan
 	if err := database.DB.Create(&plan).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -97,5 +113,33 @@ func DeletePlan(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Plan deleted successfully"})
+}
+
+// GetPlanByName retrieves a plan by name
+func GetPlanByName(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Plan name required"})
+		return
+	}
+
+	plan, err := database.GetPlanByName(name)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, plan)
+}
+
+// GetAllPlanNames retrieves all plan names
+func GetAllPlanNames(c *gin.Context) {
+	names, err := database.GetAllPlanNames()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"names": names})
 }
 

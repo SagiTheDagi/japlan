@@ -29,6 +29,8 @@ func SetupRoutes() *gin.Engine {
 			plans.PUT("/:id", handlers.UpdatePlan)
 			plans.DELETE("/:id", handlers.DeletePlan)
 			plans.GET("/user/:userId", handlers.GetPlansByUser)
+			plans.GET("/name/:name", handlers.GetPlanByName)
+			plans.GET("/names", handlers.GetAllPlanNames)
 		}
 	}
 

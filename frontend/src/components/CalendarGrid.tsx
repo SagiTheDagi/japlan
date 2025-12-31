@@ -80,7 +80,7 @@ export default function CalendarGrid({
                 >
                   <div className="text-lg">Day {day.day}</div>
                   {day.date && (
-                    <div className="text-xs text-muted-foreground font-normal mt-1">{day.date}</div>
+                    <div className="text-xs text-(--muted-foreground) font-normal mt-1">{day.date}</div>
                   )}
                 </th>
               ))}
@@ -117,7 +117,7 @@ export default function CalendarGrid({
                           </div>
                         ))}
                         {cellItems.length === 0 && (
-                          <div className="text-xs text-muted-foreground text-center py-3 font-medium">
+                          <div className="text-xs text-(--muted-foreground) text-center py-3 font-medium">
                             Drop items here
                           </div>
                         )}

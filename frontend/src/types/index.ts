@@ -55,6 +55,7 @@ export interface GridItem {
 
 export interface Plan {
   id?: string;
+  name?: string;
   userId?: string;
   preferences: UserPreferences;
   days: CalendarDay[];

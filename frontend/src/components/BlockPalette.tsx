@@ -63,7 +63,7 @@ export default function BlockPalette({
                   />
                 ))
               ) : (
-                <div className="text-center text-muted-foreground py-8">
+                <div className="text-center text-(--muted-foreground) py-8">
                   No activities found
                 </div>
               )}
@@ -78,7 +78,7 @@ export default function BlockPalette({
                   />
                 ))
               ) : (
-                <div className="text-center text-muted-foreground py-8">
+                <div className="text-center text-(--muted-foreground) py-8">
                   No restaurants found
                 </div>
               )}

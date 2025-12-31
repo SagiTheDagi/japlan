@@ -9,7 +9,10 @@ import { sampleActivities, sampleRestaurants } from '../data/sampleData';
 import { api } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sun, Moon } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Sun, Moon, Loader2 } from 'lucide-react';
 
 export default function SandboxPage() {
   const navigate = useNavigate();
@@ -17,8 +20,12 @@ export default function SandboxPage() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [loadDialogOpen, setLoadDialogOpen] = useState(false);
+  const [planName, setPlanName] = useState('');
+  const [savedPlanNames, setSavedPlanNames] = useState<string[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
   useEffect(() => {
     const isDark = localStorage.theme === 'dark' || 
@@ -144,24 +151,32 @@ export default function SandboxPage() {
   };
 
   const handleSavePlan = async () => {
-    if (!plan) return;
+    if (!plan || !planName.trim()) {
+      setSaveMessage('Please enter a plan name');
+      setTimeout(() => setSaveMessage(null), 3000);
+      return;
+    }
 
     setIsSaving(true);
     setSaveMessage(null);
 
     try {
-      const savedPlanId = localStorage.getItem('savedPlanId');
-      let savedPlan: Plan;
+      const planToSave: Plan = {
+        ...plan,
+        name: planName.trim(),
+      };
 
-      if (savedPlanId && plan.id) {
-        savedPlan = await api.updatePlan(savedPlanId, plan);
+      let savedPlan: Plan;
+      if (plan.id) {
+        savedPlan = await api.updatePlan(String(plan.id), planToSave);
       } else {
-        savedPlan = await api.createPlan(plan);
-        localStorage.setItem('savedPlanId', savedPlan.id || '');
+        savedPlan = await api.createPlan(planToSave);
       }
 
       setPlan(savedPlan);
-      setSaveMessage('Plan saved successfully!');
+      setSaveMessage(`Plan "${planName}" saved successfully!`);
+      setSaveDialogOpen(false);
+      setPlanName('');
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       console.error('Error saving plan:', error);
@@ -171,6 +186,41 @@ export default function SandboxPage() {
       setIsSaving(false);
     }
   };
+
+  const loadSavedPlanNames = async () => {
+    setIsLoadingPlans(true);
+    try {
+      const names = await api.getAllPlanNames();
+      setSavedPlanNames(names);
+    } catch (error) {
+      console.error('Error loading plan names:', error);
+      setSaveMessage('Error loading saved plans');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setIsLoadingPlans(false);
+    }
+  };
+
+  const handleLoadPlan = async (name: string) => {
+    try {
+      const loadedPlan = await api.getPlanByName(name);
+      setPlan(loadedPlan);
+      setPlanName(loadedPlan.name || '');
+      setLoadDialogOpen(false);
+      setSaveMessage(`Plan "${name}" loaded successfully!`);
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('Error loading plan:', error);
+      setSaveMessage('Error loading plan. Please try again.');
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+  };
+
+  useEffect(() => {
+    if (loadDialogOpen) {
+      loadSavedPlanNames();
+    }
+  }, [loadDialogOpen]);
 
   const renderGridItem = (item: GridItem, day: number) => {
     if (item.type === 'activity') {
@@ -227,12 +277,103 @@ export default function SandboxPage() {
                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
 
+              <Button variant="outline" onClick={() => setLoadDialogOpen(true)}>
+                Load Plan
+              </Button>
+
+              <Dialog open={loadDialogOpen} onOpenChange={setLoadDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Load Saved Plan</DialogTitle>
+                    <DialogDescription>
+                      Select a plan to load
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {isLoadingPlans ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-(--muted-foreground)" />
+                      </div>
+                    ) : savedPlanNames.length === 0 ? (
+                      <div className="text-center py-8 text-(--muted-foreground)">
+                        No saved plans found
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {savedPlanNames.map((name) => (
+                          <Button
+                            key={name}
+                            variant="outline"
+                            className="w-full justify-start"
+                            onClick={() => handleLoadPlan(name)}
+                          >
+                            {name}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <Button variant="outline" onClick={() => navigate('/')}>
                 Edit Preferences
               </Button>
-              <Button onClick={handleSavePlan} disabled={isSaving}>
+              
+              <Button 
+                onClick={() => {
+                  if (plan?.name) {
+                    setPlanName(plan.name);
+                  }
+                  setSaveDialogOpen(true);
+                }} 
+                disabled={isSaving}
+              >
                 {isSaving ? 'Saving...' : 'Save Plan'}
               </Button>
+
+              <Dialog open={saveDialogOpen} onOpenChange={(open: boolean) => {
+                setSaveDialogOpen(open);
+                if (open && plan?.name) {
+                  setPlanName(plan.name);
+                } else if (!open) {
+                  setPlanName('');
+                }
+              }}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Plan</DialogTitle>
+                    <DialogDescription>
+                      Enter a name for your plan
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="plan-name">Plan Name</Label>
+                      <Input
+                        id="plan-name"
+                        value={planName}
+                        onChange={(e) => setPlanName(e.target.value)}
+                        placeholder="e.g., Tokyo Spring 2024"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && planName.trim()) {
+                            handleSavePlan();
+                          }
+                        }}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSavePlan} disabled={isSaving || !planName.trim()}>
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </CardHeader>

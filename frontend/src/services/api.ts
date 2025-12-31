@@ -65,5 +65,26 @@ export const api = {
 
     return response.json();
   },
+
+  async getPlanByName(name: string): Promise<Plan> {
+    const response = await fetch(`${API_BASE_URL}/plans/name/${encodeURIComponent(name)}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get plan: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  async getAllPlanNames(): Promise<string[]> {
+    const response = await fetch(`${API_BASE_URL}/plans/names`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get plan names: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.names || [];
+  },
 };
 
