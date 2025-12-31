@@ -9,12 +9,14 @@ interface ActivityBlockProps {
   activity: Activity;
   isInPalette?: boolean;
   onRemove?: () => void;
+  gridItemId?: string; // ID of the grid item if this is on the grid
 }
 
 export default function ActivityBlock({
   activity,
   isInPalette = false,
   onRemove,
+  gridItemId,
 }: ActivityBlockProps) {
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -23,6 +25,7 @@ export default function ActivityBlock({
       JSON.stringify({
         type: 'activity',
         ...activity,
+        gridItemId, // Include grid item ID if this is being moved from grid
       })
     );
   };
@@ -36,7 +39,7 @@ export default function ActivityBlock({
 
   return (
     <Card
-      draggable={isInPalette}
+      draggable={true}
       onDragStart={handleDragStart}
       className={cn(
         "cursor-move border-2 border-blue-300/50 dark:border-blue-600/50 transition-all duration-200",

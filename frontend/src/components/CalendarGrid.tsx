@@ -3,7 +3,7 @@ import type { CalendarDay, GridItem } from '../types';
 
 interface CalendarGridProps {
   days: CalendarDay[];
-  onItemDrop: (day: number, timeSlot: string, item: GridItem) => void;
+  onItemDrop: (day: number, item: GridItem) => void;
   onItemRemove: (day: number, itemId: string) => void;
   gridItemRenderer: (item: GridItem, day: number) => React.ReactNode;
 }
@@ -41,8 +41,9 @@ export default function CalendarGrid({
     if (itemData) {
       try {
         const item = JSON.parse(itemData);
+        // If gridItemId exists, this is moving an existing item; otherwise it's a new item
         const gridItem: GridItem = {
-          id: `${item.type}-${item.id}-${Date.now()}`,
+          id: item.gridItemId || `${item.type}-${item.id}-${Date.now()}`,
           type: item.type,
           item: item,
           timeSlot,
@@ -51,7 +52,7 @@ export default function CalendarGrid({
             col: day - 1,
           },
         };
-        onItemDrop(day, timeSlot, gridItem);
+        onItemDrop(day, gridItem);
       } catch (error) {
         console.error('Error parsing dropped item:', error);
       }

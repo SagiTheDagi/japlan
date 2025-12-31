@@ -95,23 +95,21 @@ export default function SandboxPage() {
     });
   };
 
-  const handleItemDrop = (day: number, timeSlot: string, item: GridItem) => {
+  const handleItemDrop = (day: number, item: GridItem) => {
     if (!plan) return;
 
     setPlan((prevPlan) => {
       if (!prevPlan) return prevPlan;
 
-      const updatedDays = prevPlan.days.map((d) => {
+      // First, remove the item from its old location (if it exists)
+      const daysWithItemRemoved = prevPlan.days.map((d) => ({
+        ...d,
+        items: d.items.filter((i) => i.id !== item.id),
+      }));
+
+      // Then, add it to the new location
+      const updatedDays = daysWithItemRemoved.map((d) => {
         if (d.day === day) {
-          const existingItem = d.items.find((i) => i.id === item.id);
-          if (existingItem) {
-            return {
-              ...d,
-              items: d.items.map((i) =>
-                i.id === item.id ? { ...i, timeSlot } : i
-              ),
-            };
-          }
           return {
             ...d,
             items: [...d.items, item],
@@ -228,6 +226,7 @@ export default function SandboxPage() {
         <ActivityBlock
           activity={item.item as any}
           isInPalette={false}
+          gridItemId={item.id}
           onRemove={() => handleItemRemove(day, item.id)}
         />
       );
@@ -236,6 +235,7 @@ export default function SandboxPage() {
         <RestaurantBlock
           restaurant={item.item as any}
           isInPalette={false}
+          gridItemId={item.id}
           onRemove={() => handleItemRemove(day, item.id)}
         />
       );
