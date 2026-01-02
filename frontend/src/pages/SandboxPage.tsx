@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Plan, CalendarDay, GridItem, UserPreferences } from '../types';
 import CalendarGrid from '../components/CalendarGrid';
+import WeeksView from '../components/WeeksView';
 import BlockPalette from '../components/BlockPalette';
 import ActivityBlock from '../components/ActivityBlock';
 import RestaurantBlock from '../components/RestaurantBlock';
@@ -12,7 +13,8 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sun, Moon, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Sun, Moon, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function SandboxPage() {
   const navigate = useNavigate();
@@ -26,6 +28,8 @@ export default function SandboxPage() {
   const [planName, setPlanName] = useState('');
   const [savedPlanNames, setSavedPlanNames] = useState<string[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const [viewMode, setViewMode] = useState<'days' | 'weeks'>('days');
+  const [currentWeekStart, setCurrentWeekStart] = useState(0);
 
   useEffect(() => {
     const isDark = localStorage.theme === 'dark' || 
@@ -60,25 +64,16 @@ export default function SandboxPage() {
     if (savedPreferences) {
       try {
         const prefs = JSON.parse(savedPreferences);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:62',message:'Loading preferences',data:{tripDuration:prefs.tripDuration,savedPlanId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         setPreferences(prefs);
         
         if (savedPlanId) {
           api.getPlan(savedPlanId)
             .then((loadedPlan) => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:70',message:'Loaded plan from API',data:{planDays:loadedPlan.days?.length,planTripDuration:loadedPlan.preferences?.tripDuration,currentTripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-              // #endregion
               // Update plan with current preferences and adjust days if trip duration changed
               const currentTripDuration = prefs.tripDuration || 7;
               const planTripDuration = loadedPlan.preferences?.tripDuration || 7;
               
               if (currentTripDuration !== planTripDuration || loadedPlan.days.length !== currentTripDuration) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:77',message:'Trip duration mismatch, updating plan days',data:{currentTripDuration,planTripDuration,currentDays:loadedPlan.days.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                // #endregion
                 // Adjust days array to match current trip duration
                 let updatedDays = [...loadedPlan.days];
                 if (currentTripDuration > updatedDays.length) {
@@ -91,11 +86,12 @@ export default function SandboxPage() {
                   updatedDays = updatedDays.slice(0, currentTripDuration);
                 }
                 
-                setPlan({
+                const newPlan = {
                   ...loadedPlan,
                   preferences: prefs,
                   days: updatedDays,
-                });
+                };
+                setPlan(newPlan);
               } else {
                 // Just update preferences
                 setPlan({
@@ -105,15 +101,9 @@ export default function SandboxPage() {
               }
             })
             .catch(() => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:100',message:'Plan load failed, initializing new',data:{tripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
               initializeNewPlan(prefs);
             });
         } else {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:105',message:'No saved plan, initializing new',data:{tripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
           initializeNewPlan(prefs);
         }
       } catch (error) {
@@ -127,21 +117,16 @@ export default function SandboxPage() {
 
   const initializeNewPlan = (prefs: UserPreferences) => {
     const tripDuration = prefs.tripDuration || 7;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:88',message:'initializeNewPlan called',data:{tripDuration,prefsTripDuration:prefs.tripDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     const days: CalendarDay[] = Array.from({ length: tripDuration }, (_, i) => ({
       day: i + 1,
       items: [],
     }));
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d7fef365-2618-471b-b93a-5255705ca998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SandboxPage.tsx:95',message:'Setting plan with days',data:{daysLength:days.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
 
-    setPlan({
+    const newPlan = {
       preferences: prefs,
       days,
-    });
+    };
+    setPlan(newPlan);
   };
 
   const handleItemDrop = (day: number, item: GridItem) => {
@@ -269,6 +254,71 @@ export default function SandboxPage() {
     }
   }, [loadDialogOpen]);
 
+  // Calculate visible days based on view mode
+  const visibleDays = useMemo(() => {
+    if (!plan) return [];
+    
+    if (viewMode === 'days') {
+      // In days view, show 7 days at a time (navigate by week)
+      if (plan.days.length > 7) {
+        return plan.days.slice(currentWeekStart, currentWeekStart + 7);
+      }
+      return plan.days;
+    } else {
+      // Weeks view: show ALL days in a wrapping grid (like monthly calendar)
+      return plan.days;
+    }
+  }, [plan, viewMode, currentWeekStart]);
+
+  // Calculate week information
+  const totalWeeks = useMemo(() => {
+    if (!plan) return 0;
+    return Math.ceil(plan.days.length / 7);
+  }, [plan]);
+
+  const currentWeekNumber = useMemo(() => {
+    return Math.floor(currentWeekStart / 7) + 1;
+  }, [currentWeekStart]);
+
+  const weekStartDay = currentWeekStart + 1;
+  const weekEndDay = Math.min(currentWeekStart + 7, plan?.days.length || 0);
+
+  // Navigation handlers
+  const handlePreviousWeek = () => {
+    if (viewMode === 'days') {
+      // In days view, navigate by week (7 days)
+      const newStart = currentWeekStart - 7;
+      if (newStart >= 0) {
+        setCurrentWeekStart(newStart);
+      }
+    } else {
+      // In weeks view, navigation doesn't change what's shown (all days always visible)
+      // But we can still track currentWeekStart for future features
+      // For now, do nothing or scroll to previous section
+    }
+  };
+
+  const handleNextWeek = () => {
+    if (!plan) return;
+    if (viewMode === 'days') {
+      // In days view, navigate by week (7 days)
+      const newStart = currentWeekStart + 7;
+      const maxStart = plan.days.length - 7;
+      if (newStart <= maxStart) {
+        setCurrentWeekStart(newStart);
+      }
+    } else {
+      // In weeks view, navigation doesn't change what's shown (all days always visible)
+      // But we can still track currentWeekStart for future features
+      // For now, do nothing or scroll to next section
+    }
+  };
+
+  const handleViewModeChange = (mode: 'days' | 'weeks') => {
+    setViewMode(mode);
+    setCurrentWeekStart(0); // Reset to first week when switching views
+  };
+
   const renderGridItem = (item: GridItem, day: number) => {
     if (item.type === 'activity') {
       return (
@@ -305,8 +355,35 @@ export default function SandboxPage() {
       <Card className="rounded-none border-x-0 border-t-0">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-3xl">Your Japan Itinerary</CardTitle>
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-3xl">Your Japan Itinerary</CardTitle>
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-1 border border-(--border) rounded-md p-1">
+                  <Button
+                    variant={viewMode === 'days' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleViewModeChange('days')}
+                    className={cn(
+                      "h-7 px-3 text-xs",
+                      viewMode === 'days' && "bg-(--primary) text-(--primary-foreground)"
+                    )}
+                  >
+                    Days
+                  </Button>
+                  <Button
+                    variant={viewMode === 'weeks' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleViewModeChange('weeks')}
+                    className={cn(
+                      "h-7 px-3 text-xs",
+                      viewMode === 'weeks' && "bg-(--primary) text-(--primary-foreground)"
+                    )}
+                  >
+                    Weeks
+                  </Button>
+                </div>
+              </div>
               <CardDescription className="mt-1">
                 {preferences.tripDuration} days • {preferences.travelStyle} style
               </CardDescription>
@@ -434,13 +511,60 @@ export default function SandboxPage() {
           restaurants={sampleRestaurants}
         />
 
-        <div className="flex-1 overflow-auto">
-          <CalendarGrid
-            days={plan.days}
-            onItemDrop={handleItemDrop}
-            onItemRemove={handleItemRemove}
-            gridItemRenderer={renderGridItem}
-          />
+        <div className="flex-1 overflow-auto flex flex-col">
+          {plan && plan.days.length > 7 && (
+            <div className="sticky top-0 z-20 bg-(--background) border-b border-(--border) px-6 py-6 flex items-center justify-center gap-6 shadow-sm">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handlePreviousWeek}
+                disabled={currentWeekStart === 0}
+                className="h-12 w-12"
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </Button>
+              <div className="text-3xl font-bold text-center min-w-[350px]">
+                {viewMode === 'days' ? (
+                  <>
+                    Week {currentWeekNumber} of {totalWeeks}
+                    <div className="text-lg font-normal text-(--muted-foreground) mt-2">
+                      Days {weekStartDay}-{weekEndDay} of {plan.days.length}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    All Days
+                    <div className="text-lg font-normal text-(--muted-foreground) mt-2">
+                      {plan.days.length} days total
+                    </div>
+                  </>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleNextWeek}
+                disabled={plan ? (viewMode === 'days' ? currentWeekStart >= plan.days.length - 7 : false) : true}
+                className="h-12 w-12"
+              >
+                <ChevronRight className="h-8 w-8" />
+              </Button>
+            </div>
+          )}
+          {viewMode === 'days' ? (
+            <CalendarGrid
+              days={visibleDays}
+              onItemDrop={handleItemDrop}
+              onItemRemove={handleItemRemove}
+              gridItemRenderer={renderGridItem}
+            />
+          ) : (
+            <WeeksView
+              days={visibleDays}
+              onItemDrop={handleItemDrop}
+              onItemRemove={handleItemRemove}
+            />
+          )}
         </div>
       </div>
     </div>
