@@ -7,10 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import { Filter, X } from 'lucide-react';
+import { Filter } from 'lucide-react';
+import TypeFilterChips from './TypeFilterChips';
+import FilterPanel from './FilterPanel';
 
 interface BlockPaletteProps {
   activities: Activity[];
@@ -28,67 +27,6 @@ export default function BlockPalette({
   const [selectedDietaryOptions, setSelectedDietaryOptions] = useState<string[]>([]);
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
 
-  // Extract unique filter options
-  const activityCategories = useMemo(() => {
-    return Array.from(new Set(activities.map(a => a.category))).sort();
-  }, [activities]);
-
-  const priceRanges = useMemo(() => {
-    const activityPrices = activities.map(a => a.priceRange);
-    const restaurantPrices = restaurants.map(r => r.priceRange);
-    return Array.from(new Set([...activityPrices, ...restaurantPrices])).sort();
-  }, [activities, restaurants]);
-
-  const dietaryOptions = useMemo(() => {
-    const allOptions: string[] = [];
-    restaurants.forEach(r => {
-      if (r.dietaryOptions) {
-        allOptions.push(...r.dietaryOptions);
-      }
-    });
-    return Array.from(new Set(allOptions)).sort();
-  }, [restaurants]);
-
-  const cuisines = useMemo(() => {
-    return Array.from(new Set(restaurants.map(r => r.cuisine))).sort();
-  }, [restaurants]);
-
-  // Calculate counts for filter options
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    activities.forEach(activity => {
-      counts[activity.category] = (counts[activity.category] || 0) + 1;
-    });
-    return counts;
-  }, [activities]);
-
-  const priceRangeCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    [...activities, ...restaurants].forEach(item => {
-      counts[item.priceRange] = (counts[item.priceRange] || 0) + 1;
-    });
-    return counts;
-  }, [activities, restaurants]);
-
-  const dietaryOptionCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    restaurants.forEach(restaurant => {
-      if (restaurant.dietaryOptions) {
-        restaurant.dietaryOptions.forEach(option => {
-          counts[option] = (counts[option] || 0) + 1;
-        });
-      }
-    });
-    return counts;
-  }, [restaurants]);
-
-  const cuisineCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    restaurants.forEach(restaurant => {
-      counts[restaurant.cuisine] = (counts[restaurant.cuisine] || 0) + 1;
-    });
-    return counts;
-  }, [restaurants]);
 
   // Filter activities
   const filteredActivities = activities.filter((activity) => {
@@ -218,158 +156,27 @@ export default function BlockPalette({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 max-h-[600px] overflow-y-auto">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-sm">Filters</h4>
-                  {activeFilterCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearAllFilters}
-                      className="h-7 text-xs"
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Clear All
-                    </Button>
-                  )}
-                </div>
-
-                {/* Activity Categories */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Activity Categories</Label>
-                  <div className="space-y-2">
-                    {activityCategories.map((category) => (
-                      <div key={category} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`category-${category}`}
-                          checked={selectedActivityCategories.includes(category)}
-                          onCheckedChange={() => toggleFilter('activityCategories', category)}
-                        />
-                        <Label
-                          htmlFor={`category-${category}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          {category} ({categoryCounts[category]})
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Ranges */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Price Range</Label>
-                  <div className="space-y-2">
-                    {priceRanges.map((priceRange) => (
-                      <div key={priceRange} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`price-${priceRange}`}
-                          checked={selectedPriceRanges.includes(priceRange)}
-                          onCheckedChange={() => toggleFilter('priceRanges', priceRange)}
-                        />
-                        <Label
-                          htmlFor={`price-${priceRange}`}
-                          className="text-sm font-normal cursor-pointer flex-1 capitalize"
-                        >
-                          {priceRange} ({priceRangeCounts[priceRange]})
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Cuisines */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Cuisines</Label>
-                  <div className="space-y-2">
-                    {cuisines.map((cuisine) => (
-                      <div key={cuisine} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`cuisine-${cuisine}`}
-                          checked={selectedCuisines.includes(cuisine)}
-                          onCheckedChange={() => toggleFilter('cuisines', cuisine)}
-                        />
-                        <Label
-                          htmlFor={`cuisine-${cuisine}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          {cuisine} ({cuisineCounts[cuisine]})
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Dietary Options */}
-                {dietaryOptions.length > 0 && (
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Dietary Options</Label>
-                    <div className="space-y-2">
-                      {dietaryOptions.map((option) => (
-                        <div key={option} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`dietary-${option}`}
-                            checked={selectedDietaryOptions.includes(option)}
-                            onCheckedChange={() => toggleFilter('dietaryOptions', option)}
-                          />
-                          <Label
-                            htmlFor={`dietary-${option}`}
-                            className="text-sm font-normal cursor-pointer flex-1 capitalize"
-                          >
-                            {option} ({dietaryOptionCounts[option]})
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <FilterPanel
+                activities={activities}
+                restaurants={restaurants}
+                selectedActivityCategories={selectedActivityCategories}
+                selectedPriceRanges={selectedPriceRanges}
+                selectedDietaryOptions={selectedDietaryOptions}
+                selectedCuisines={selectedCuisines}
+                onToggleFilter={toggleFilter}
+                onClearAll={clearAllFilters}
+              />
             </PopoverContent>
           </Popover>
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden flex flex-col p-0">
-        {/* Type Filter Chips */}
-        <div className="px-4 pt-4 pb-3">
-          <div className="flex gap-2">
-            <Badge
-              variant={selectedType === 'all' ? 'default' : 'outline'}
-              className={cn(
-                "cursor-pointer transition-all duration-200 px-2 py-1 text-xs font-medium",
-                selectedType === 'all'
-                  ? "bg-(--primary) text-(--primary-foreground) shadow-sm border border-(--primary)"
-                  : "bg-transparent text-(--muted-foreground) border border-(--border) hover:border-(--primary)/50 hover:text-(--foreground) hover:bg-(--muted)/50"
-              )}
-              onClick={() => setSelectedType('all')}
-            >
-              All ({filteredActivities.length + filteredRestaurants.length})
-            </Badge>
-            <Badge
-              variant={selectedType === 'activity' ? 'default' : 'outline'}
-              className={cn(
-                "cursor-pointer transition-all duration-200 px-2 py-1 text-xs font-medium",
-                selectedType === 'activity'
-                  ? "bg-(--primary) text-(--primary-foreground) shadow-sm border border-(--primary)"
-                  : "bg-transparent text-(--muted-foreground) border border-(--border) hover:border-(--primary)/50 hover:text-(--foreground) hover:bg-(--muted)/50"
-              )}
-              onClick={() => setSelectedType('activity')}
-            >
-              Activities ({filteredActivities.length})
-            </Badge>
-            <Badge
-              variant={selectedType === 'restaurant' ? 'default' : 'outline'}
-              className={cn(
-                "cursor-pointer transition-all duration-200 px-2 py-1 text-xs font-medium",
-                selectedType === 'restaurant'
-                  ? "bg-(--primary) text-(--primary-foreground) shadow-sm border border-(--primary)"
-                  : "bg-transparent text-(--muted-foreground) border border-(--border) hover:border-(--primary)/50 hover:text-(--foreground) hover:bg-(--muted)/50"
-              )}
-              onClick={() => setSelectedType('restaurant')}
-            >
-              Restaurants ({filteredRestaurants.length})
-            </Badge>
-          </div>
-        </div>
+        <TypeFilterChips
+          selectedType={selectedType}
+          activityCount={filteredActivities.length}
+          restaurantCount={filteredRestaurants.length}
+          onTypeChange={setSelectedType}
+        />
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {filteredItems.length > 0 ? (
             <div className="space-y-3">

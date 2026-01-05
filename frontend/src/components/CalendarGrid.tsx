@@ -1,11 +1,21 @@
 import { useState } from 'react';
 import type { CalendarDay, GridItem } from '../types';
+import NavigationControls from './NavigationControls';
 
 interface CalendarGridProps {
   days: CalendarDay[];
   onItemDrop: (day: number, item: GridItem) => void;
   onItemRemove: (day: number, itemId: string) => void;
   gridItemRenderer: (item: GridItem, day: number) => React.ReactNode;
+  viewMode: 'week' | 'month';
+  currentWeekStart: number;
+  totalDays: number;
+  totalWeeks: number;
+  currentWeekNumber: number;
+  weekStartDay: number;
+  weekEndDay: number;
+  onPrevious: () => void;
+  onNext: () => void;
 }
 
 const timeSlots = [
@@ -18,6 +28,15 @@ export default function CalendarGrid({
   days,
   onItemDrop,
   gridItemRenderer,
+  viewMode,
+  currentWeekStart,
+  totalDays,
+  totalWeeks,
+  currentWeekNumber,
+  weekStartDay,
+  weekEndDay,
+  onPrevious,
+  onNext,
 }: CalendarGridProps) {
   const [draggedOverCell, setDraggedOverCell] = useState<{
     day: number;
@@ -66,8 +85,20 @@ export default function CalendarGrid({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <div className="inline-block min-w-full">
+    <div className="flex flex-col h-full">
+      <NavigationControls
+        viewMode={viewMode}
+        currentWeekStart={currentWeekStart}
+        totalDays={totalDays}
+        totalWeeks={totalWeeks}
+        currentWeekNumber={currentWeekNumber}
+        weekStartDay={weekStartDay}
+        weekEndDay={weekEndDay}
+        onPrevious={onPrevious}
+        onNext={onNext}
+      />
+      <div className="flex-1 overflow-x-auto">
+        <div className="inline-block min-w-full">
         <table className="min-w-full border-collapse">
           <thead>
             <tr>
@@ -111,7 +142,7 @@ export default function CalendarGrid({
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, day.day, timeSlot)}
                     >
-                      <div className="flex flex-col gap-2 min-h-15">
+                      <div className="flex flex-col gap-2 min-h-15 select-none">
                         {cellItems.map((item) => (
                           <div key={item.id}>
                             {gridItemRenderer(item, day.day)}
@@ -130,6 +161,7 @@ export default function CalendarGrid({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -249,7 +249,7 @@ export default function PreferencesPage() {
                     id="duration"
                     type="number"
                     min="1"
-                    max="30"
+                    max="365"
                     value={formData.tripDuration}
                     onChange={(e) => setFormData(prev => ({ ...prev, tripDuration: parseInt(e.target.value) || 1 }))}
                     className="w-32"
