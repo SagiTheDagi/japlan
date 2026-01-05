@@ -155,7 +155,7 @@ export default function BlockPalette({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 max-h-[600px] overflow-y-auto">
+            <PopoverContent className="w-80 max-h-[600px] overflow-y-auto custom-scrollbar">
               <FilterPanel
                 activities={activities}
                 restaurants={restaurants}
@@ -177,7 +177,7 @@ export default function BlockPalette({
           restaurantCount={filteredRestaurants.length}
           onTypeChange={setSelectedType}
         />
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
           {filteredItems.length > 0 ? (
             <div className="space-y-3">
               {filteredItems.map((unifiedItem) => {

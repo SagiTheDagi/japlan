@@ -51,9 +51,45 @@
 @layer base {
   * {
     border-color: var(--border);
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
   }
   body {
     background-color: var(--background);
     color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--muted-foreground);
+    opacity: 0.3;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+
+  /* Custom scrollbar utility */
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border: 1px solid transparent;
+    background-clip: content-box;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+    background-clip: content-box;
   }
 }

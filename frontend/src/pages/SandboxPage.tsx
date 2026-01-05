@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Plan, CalendarDay, GridItem, UserPreferences } from '../types';
-import CalendarGrid from '../components/CalendarGrid';
+import CalendarGrid from '../components/WeekView';
 import MonthView from '../components/MonthView';
 import BlockPalette from '../components/BlockPalette';
 import ActivityBlock from '../components/ActivityBlock';
@@ -346,7 +346,7 @@ export default function SandboxPage() {
           restaurants={sampleRestaurants}
         />
 
-        <div className="flex-1 overflow-auto flex flex-col">
+        <div className={`flex-1 flex flex-col ${viewMode === 'month' ? 'overflow-hidden' : 'overflow-auto'}`}>
           {viewMode === 'week' ? (
             <CalendarGrid
               days={visibleDays}

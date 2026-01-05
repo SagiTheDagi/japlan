@@ -97,7 +97,7 @@ export default function CalendarGrid({
         onPrevious={onPrevious}
         onNext={onNext}
       />
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto custom-scrollbar">
         <div className="inline-block min-w-full">
         <table className="min-w-full border-collapse">
           <thead>

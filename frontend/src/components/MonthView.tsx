@@ -84,41 +84,41 @@ export default function MonthView({
         onPrevious={onPrevious}
         onNext={onNext}
       />
-      <div className="p-6 flex-1 overflow-auto">
-        <div className="grid grid-cols-7 gap-2 auto-rows-fr">
+      <div className="p-2 flex-1 overflow-hidden h-full">
+        <div className="grid grid-cols-7 gap-1 h-full auto-rows-fr">
         {days.map((day) => (
           <div
             key={day.day}
             className={cn(
-              "border border-(--border) rounded-lg p-3 bg-(--card) min-h-[200px] transition-all flex flex-col",
+              "border border-(--border) rounded-lg p-2 bg-(--card) transition-all flex flex-col min-h-0 h-full",
               draggedOverDay === day.day && "bg-(--primary)/10 border-(--primary) border-2 shadow-lg"
             )}
             onDragOver={(e) => handleDragOver(e, day.day)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, day.day)}
           >
-            <div className="font-semibold text-sm mb-2">
-              Day {day.day}
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-bold text-xs">Day {day.day}</span>
               {day.date && (
-                <div className="text-xs text-(--muted-foreground) font-normal mt-1">
+                <span className="text-[10px] text-(--muted-foreground) font-normal">
                   {day.date}
-                </div>
+                </span>
               )}
             </div>
-            <div className="flex flex-wrap gap-1 flex-1 w-full items-start content-start">
+            <div className="flex flex-col gap-1 flex-1 w-full overflow-y-auto pr-1 custom-scrollbar">
               {day.items.length > 0 ? (
                 day.items.map((item) => (
                   <Badge
                     key={item.id}
                     variant={item.type === 'activity' ? 'default' : 'secondary'}
                     className={cn(
-                      "inline-flex items-center gap-1 text-[10px] py-0 px-1 cursor-default shrink-0 h-5 leading-tight rounded-md!",
+                      "flex items-center justify-between gap-1 text-[10px] py-0.5 px-2 cursor-default w-full rounded-md!",
                       item.type === 'activity' 
-                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
-                        : "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300"
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 border-blue-200/50"
+                        : "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200 border-orange-200/50"
                     )}
                   >
-                    <span className="truncate max-w-[80px]">
+                    <span className="truncate flex-1">
                       {item.type === 'activity' 
                         ? (item.item as any).name 
                         : (item.item as any).name}
@@ -126,7 +126,7 @@ export default function MonthView({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-3 w-3 hover:bg-transparent shrink-0 p-0"
+                      className="h-3 w-3 hover:bg-transparent shrink-0 p-0 ml-1 opacity-60 hover:opacity-100"
                       onClick={() => onItemRemove(day.day, item.id)}
                     >
                       <X className="h-2.5 w-2.5" />
@@ -134,8 +134,10 @@ export default function MonthView({
                   </Badge>
                 ))
               ) : (
-                <div className="text-xs text-(--muted-foreground) text-center py-4 w-full">
-                  No items
+                <div className="flex-1 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                   <div className="text-[10px] text-(--muted-foreground) border border-dashed border-(--border) rounded px-2 py-1 select-none">
+                    +
+                   </div>
                 </div>
               )}
             </div>
