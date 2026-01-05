@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { CalendarDay, GridItem } from '../types';
 import NavigationControls from './NavigationControls';
+import WeekHeader from './calendar/WeekHeader';
+import WeekGridRow from './calendar/WeekGridRow';
 
 interface CalendarGridProps {
   days: CalendarDay[];
@@ -100,64 +102,20 @@ export default function CalendarGrid({
       <div className="flex-1 overflow-x-auto custom-scrollbar">
         <div className="inline-block min-w-full">
         <table className="min-w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="sticky left-0 z-10 bg-(--card) border border-(--border) p-3 text-left font-bold">
-                Time
-              </th>
-              {days.map((day) => (
-                <th
-                  key={day.day}
-                  className="min-w-50 border border-(--border) p-4 bg-(--muted)/50 text-center font-bold"
-                >
-                  <div className="text-lg">Day {day.day}</div>
-                  {day.date && (
-                    <div className="text-xs text-(--muted-foreground) font-normal mt-1">{day.date}</div>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <WeekHeader days={days} />
           <tbody>
             {timeSlots.map((timeSlot) => (
-              <tr key={timeSlot}>
-                <td className="sticky left-0 z-10 bg-(--card) border border-(--border) p-3 text-sm font-semibold">
-                  {timeSlot}
-                </td>
-                {days.map((day) => {
-                  const cellItems = getItemsForCell(day.day, timeSlot);
-                  const isDraggedOver =
-                    draggedOverCell?.day === day.day &&
-                    draggedOverCell?.timeSlot === timeSlot;
-
-                  return (
-                    <td
-                      key={`${day.day}-${timeSlot}`}
-                      className={`min-h-20 border border-(--border) p-3 relative ${
-                        isDraggedOver
-                          ? 'bg-(--primary)/10 border-(--primary) border-2 shadow-lg'
-                          : 'bg-(--background) hover:bg-(--muted)/50'
-                      } transition-all duration-200`}
-                      onDragOver={(e) => handleDragOver(e, day.day, timeSlot)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, day.day, timeSlot)}
-                    >
-                      <div className="flex flex-col gap-2 min-h-15 select-none">
-                        {cellItems.map((item) => (
-                          <div key={item.id}>
-                            {gridItemRenderer(item, day.day)}
-                          </div>
-                        ))}
-                        {cellItems.length === 0 && (
-                          <div className="text-xs text-(--muted-foreground) text-center py-3 font-medium">
-                            Drop items here
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
+              <WeekGridRow
+                key={timeSlot}
+                timeSlot={timeSlot}
+                days={days}
+                draggedOverCell={draggedOverCell}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                getItemsForCell={getItemsForCell}
+                gridItemRenderer={gridItemRenderer}
+              />
             ))}
           </tbody>
         </table>
