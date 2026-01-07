@@ -4,11 +4,8 @@ export interface UserPreferences {
     dietaryRestrictions: string[];
     cuisinePreferences: string[];
   };
-  budgetRange: {
-    min: number;
-    max: number;
-  };
-  tripDuration: number; // in days
+  budget: 'low' | 'medium' | 'high' | 'luxury' | 'flexible';
+  tripDuration: number; 
   travelStyle: 'relaxed' | 'adventurous' | 'balanced' | 'cultural' | 'foodie';
 }
 
