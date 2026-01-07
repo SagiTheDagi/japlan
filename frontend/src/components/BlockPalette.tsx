@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { Activity, Restaurant } from '../types';
+import type { Activity, Restaurant, BlockItem } from '../types';
 import ActivityBlock from './ActivityBlock';
 import RestaurantBlock from './RestaurantBlock';
 import { Input } from '@/components/ui/input';
@@ -14,11 +14,13 @@ import FilterPanel from './FilterPanel';
 interface BlockPaletteProps {
   activities: Activity[];
   restaurants: Restaurant[];
+  onItemClick?: (item: BlockItem) => void;
 }
 
 export default function BlockPalette({
   activities,
   restaurants,
+  onItemClick,
 }: BlockPaletteProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'activity' | 'restaurant'>('all');
@@ -28,17 +30,13 @@ export default function BlockPalette({
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
 
 
-  // Filter activities
   const filteredActivities = activities.filter((activity) => {
-    // Activity category filter
     const matchesCategory = selectedActivityCategories.length === 0 || 
       selectedActivityCategories.includes(activity.category);
     
-    // Price range filter
     const matchesPrice = selectedPriceRanges.length === 0 || 
       selectedPriceRanges.includes(activity.priceRange);
     
-    // Search query filter
     const matchesSearch = 
       activity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       activity.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -47,23 +45,18 @@ export default function BlockPalette({
     return matchesCategory && matchesPrice && matchesSearch;
   });
 
-  // Filter restaurants
   const filteredRestaurants = restaurants.filter((restaurant) => {
-    // Cuisine filter
     const matchesCuisine = selectedCuisines.length === 0 || 
       selectedCuisines.includes(restaurant.cuisine);
     
-    // Price range filter
     const matchesPrice = selectedPriceRanges.length === 0 || 
       selectedPriceRanges.includes(restaurant.priceRange);
     
-    // Dietary options filter
     const matchesDietary = selectedDietaryOptions.length === 0 || 
       (restaurant.dietaryOptions && restaurant.dietaryOptions.some(option => 
         selectedDietaryOptions.includes(option)
       ));
     
-    // Search query filter
     const matchesSearch = 
       restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       restaurant.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -72,7 +65,6 @@ export default function BlockPalette({
     return matchesCuisine && matchesPrice && matchesDietary && matchesSearch;
   });
 
-  // Combine filtered items into unified list
   type UnifiedItem = { type: 'activity'; item: Activity } | { type: 'restaurant'; item: Restaurant };
   const filteredItems: UnifiedItem[] = useMemo(() => {
     const items: UnifiedItem[] = [];
@@ -88,7 +80,6 @@ export default function BlockPalette({
     return items;
   }, [filteredActivities, filteredRestaurants, selectedType]);
 
-  // Count active filters
   const activeFilterCount = useMemo(() => {
     return selectedActivityCategories.length + 
            selectedPriceRanges.length + 
@@ -96,7 +87,6 @@ export default function BlockPalette({
            selectedCuisines.length;
   }, [selectedActivityCategories, selectedPriceRanges, selectedDietaryOptions, selectedCuisines]);
 
-  // Clear all filters
   const clearAllFilters = () => {
     setSelectedActivityCategories([]);
     setSelectedPriceRanges([]);
@@ -104,7 +94,6 @@ export default function BlockPalette({
     setSelectedCuisines([]);
   };
 
-  // Toggle filter option
   const toggleFilter = (
     category: 'activityCategories' | 'priceRanges' | 'dietaryOptions' | 'cuisines',
     value: string
@@ -187,6 +176,7 @@ export default function BlockPalette({
                       key={`activity-${unifiedItem.item.id}`}
                       activity={unifiedItem.item}
                       isInPalette={true}
+                      onViewDetails={onItemClick ? () => onItemClick(unifiedItem.item) : undefined}
                     />
                   );
                 } else {
@@ -195,6 +185,7 @@ export default function BlockPalette({
                       key={`restaurant-${unifiedItem.item.id}`}
                       restaurant={unifiedItem.item}
                       isInPalette={true}
+                      onViewDetails={onItemClick ? () => onItemClick(unifiedItem.item) : undefined}
                     />
                   );
                 }

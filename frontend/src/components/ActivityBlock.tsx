@@ -9,13 +9,15 @@ interface ActivityBlockProps {
   activity: Activity;
   isInPalette?: boolean;
   onRemove?: () => void;
-  gridItemId?: string; // ID of the grid item if this is on the grid
+  onViewDetails?: () => void;
+  gridItemId?: string;
 }
 
 export default function ActivityBlock({
   activity,
   isInPalette = false,
   onRemove,
+  onViewDetails,
   gridItemId,
 }: ActivityBlockProps) {
   const handleDragStart = (e: React.DragEvent) => {
@@ -25,7 +27,7 @@ export default function ActivityBlock({
       JSON.stringify({
         type: 'activity',
         ...activity,
-        gridItemId, // Include grid item ID if this is being moved from grid
+        gridItemId,
       })
     );
   };
@@ -42,9 +44,10 @@ export default function ActivityBlock({
       draggable={true}
       onDragStart={handleDragStart}
       className={cn(
-        "cursor-move border-2 border-blue-300/50 dark:border-blue-600/50 transition-all duration-200",
+        "cursor-move border-2 border-blue-300/50 dark:border-blue-600/50 transition-all duration-200 select-none",
         isInPalette && "hover:shadow-lg hover:scale-105 hover:border-blue-400 dark:hover:border-blue-500"
       )}
+      onClick={onViewDetails}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
@@ -72,7 +75,10 @@ export default function ActivityBlock({
               variant="ghost"
               size="icon"
               className="h-6 w-6 shrink-0"
-              onClick={onRemove}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onRemove) onRemove();
+              }}
               aria-label="Remove"
             >
               <X className="h-4 w-4" />

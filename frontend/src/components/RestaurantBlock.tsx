@@ -9,13 +9,15 @@ interface RestaurantBlockProps {
   restaurant: Restaurant;
   isInPalette?: boolean;
   onRemove?: () => void;
-  gridItemId?: string; // ID of the grid item if this is on the grid
+  onViewDetails?: () => void;
+  gridItemId?: string;
 }
 
 export default function RestaurantBlock({
   restaurant,
   isInPalette = false,
   onRemove,
+  onViewDetails,
   gridItemId,
 }: RestaurantBlockProps) {
   const handleDragStart = (e: React.DragEvent) => {
@@ -25,7 +27,7 @@ export default function RestaurantBlock({
       JSON.stringify({
         type: 'restaurant',
         ...restaurant,
-        gridItemId, // Include grid item ID if this is being moved from grid
+        gridItemId,
       })
     );
   };
@@ -42,9 +44,10 @@ export default function RestaurantBlock({
       draggable={true}
       onDragStart={handleDragStart}
       className={cn(
-        "cursor-move border-2 border-orange-300/50 dark:border-orange-600/50 transition-all duration-200",
+        "cursor-move border-2 border-orange-300/50 dark:border-orange-600/50 transition-all duration-200 select-none",
         isInPalette && "hover:shadow-lg hover:scale-105 hover:border-orange-400 dark:hover:border-orange-500"
       )}
+      onClick={onViewDetails}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
@@ -74,7 +77,10 @@ export default function RestaurantBlock({
               variant="ghost"
               size="icon"
               className="h-6 w-6 shrink-0"
-              onClick={onRemove}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onRemove) onRemove();
+              }}
               aria-label="Remove"
             >
               <X className="h-4 w-4" />
