@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Plan, CalendarDay, GridItem, UserPreferences } from '../types';
 import CalendarGrid from '../components/WeekView';
@@ -227,7 +227,7 @@ export default function SandboxPage() {
     }
   };
 
-  const loadSavedPlanNames = async () => {
+  const loadSavedPlanNames = useCallback(async () => {
     setIsLoadingPlans(true);
     try {
       const names = await api.getAllPlanNames();
@@ -239,7 +239,7 @@ export default function SandboxPage() {
     } finally {
       setIsLoadingPlans(false);
     }
-  };
+  }, []);
 
   const handleLoadPlan = async (name: string) => {
     try {
