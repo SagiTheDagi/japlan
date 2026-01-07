@@ -41,90 +41,96 @@ export default function AttractionDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md sm:max-w-lg">
-        <DialogHeader>
-          <div className="flex items-start gap-4 pr-8">
-            {item.imageUrl && (
-              <img 
-                src={item.imageUrl} 
-                alt={item.name} 
-                className="w-16 h-16 rounded-md object-cover border select-none"
-              />
-            )}
-            <div>
-              <DialogTitle className="text-xl mb-1">{item.name}</DialogTitle>
-              {isActivity(item) && (
-                <Badge variant="secondary" className="inline-flex items-center gap-1.5 px-2 py-0 text-sm font-normal text-(--muted-foreground)">
-                  <MapPin className="h-4 w-4" />
-                  {item.category}
-                </Badge>
-              )}
-              {isRestaurant(item) && (
-                <Badge variant="secondary" className="inline-flex items-center gap-1.5 px-2 py-0 text-sm font-normal text-(--muted-foreground)">
-                  <Utensils className="h-4 w-4" />
-                  {item.cuisine}
-                </Badge>
-              )}
-            </div>
+      <DialogContent className="max-w-md sm:max-w-lg p-0 block gap-0 overflow-hidden">
+        {item.imageUrl && (
+          <div className="relative h-64 w-full shrink-0">
+            <img 
+              src={item.imageUrl} 
+              alt={item.name} 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-(--background) to-transparent" />
           </div>
-        </DialogHeader>
+        )}
 
-        <div className="my-2 border-b" />
-
-        <div className="max-h-[60vh] overflow-y-auto pr-2">
-          <div className="space-y-4 py-2">
-            <div>
-              <h4 className="font-semibold mb-2">Description</h4>
-              <DialogDescription className="text-(--foreground)">
-                {item.description}
-              </DialogDescription>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {isActivity(item) && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-(--muted-foreground)" />
-                  <span className="text-sm">Duration: {item.duration}h</span>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-(--muted-foreground)" />
-                <span className="text-sm">
-                  Price: 
-                  <Badge variant="secondary" className={`ml-2 ${priceVariants[item.priceRange]}`}>
-                    {item.priceRange}
+        <div className="p-6">
+          <DialogHeader>
+            <div className="flex items-start gap-4 pr-8">
+              <div className="w-full">
+                <DialogTitle className="text-xl mb-1">{item.name}</DialogTitle>
+                {isActivity(item) && (
+                  <Badge variant="secondary" className="inline-flex items-center gap-1.5 px-2 py-0 text-sm font-normal text-(--muted-foreground)">
+                    <MapPin className="h-4 w-4" />
+                    {item.category}
                   </Badge>
-                </span>
+                )}
+                {isRestaurant(item) && (
+                  <Badge variant="secondary" className="inline-flex items-center gap-1.5 px-2 py-0 text-sm font-normal text-(--muted-foreground)">
+                    <Utensils className="h-4 w-4" />
+                    {item.cuisine}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="my-4 border-b" />
+
+          <div className="max-h-[60vh] overflow-y-auto pr-2">
+            <div className="space-y-4 py-2">
+              <div>
+                <h4 className="font-semibold mb-2">Description</h4>
+                <DialogDescription className="text-(--foreground)">
+                  {item.description}
+                </DialogDescription>
               </div>
 
-              {item.location && (
-                <div className="col-span-2 flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-(--muted-foreground) mt-0.5" />
-                  <span className="text-sm">{item.location}</span>
+              <div className="grid grid-cols-2 gap-4">
+                {isActivity(item) && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-(--muted-foreground)" />
+                    <span className="text-sm">Duration: {item.duration}h</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-(--muted-foreground)" />
+                  <span className="text-sm">
+                    Price: 
+                    <Badge variant="secondary" className={`ml-2 ${priceVariants[item.priceRange]}`}>
+                      {item.priceRange}
+                    </Badge>
+                  </span>
+                </div>
+
+                {item.location && (
+                  <div className="col-span-2 flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-(--muted-foreground) mt-0.5" />
+                    <span className="text-sm">{item.location}</span>
+                  </div>
+                )}
+              </div>
+
+              {isRestaurant(item) && item.dietaryOptions && item.dietaryOptions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 text-sm">Dietary Options</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {item.dietaryOptions.map((option) => (
+                      <Badge key={option} variant="outline" className="bg-green-50 dark:bg-green-500/20 select-none">
+                        {option.slice(0, 1).toUpperCase() + option.slice(1)}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-
-            {isRestaurant(item) && item.dietaryOptions && item.dietaryOptions.length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2 text-sm">Dietary Options</h4>
-                <div className="flex flex-wrap gap-2">
-                  {item.dietaryOptions.map((option) => (
-                    <Badge key={option} variant="outline" className="bg-green-50 dark:bg-green-500/20 select-none">
-                      {option.slice(0, 1).toUpperCase() + option.slice(1)}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-        </div>
 
-        <div className="flex justify-end pt-4">
-          <Button variant="destructive" onClick={onClose} className="select-none">
-            Close
-          </Button>
+          <div className="flex justify-end pt-4">
+            <Button variant="destructive" onClick={onClose} className="select-none">
+              Close
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
