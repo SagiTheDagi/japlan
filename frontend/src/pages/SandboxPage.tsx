@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Plan, CalendarDay, GridItem, UserPreferences } from '../types';
+import type { Plan, CalendarDay, GridItem, UserPreferences, BlockItem } from '../types';
+import AttractionDetailsModal from '../components/AttractionDetailsModal';
 import CalendarGrid from '../components/WeekView';
 import MonthView from '../components/MonthView';
 import BlockPalette from '../components/BlockPalette';
@@ -23,6 +24,8 @@ export default function SandboxPage() {
   const [savedPlanNames, setSavedPlanNames] = useState<string[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [selectedAttraction, setSelectedAttraction] = useState<BlockItem | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   
   const {
     currentStart,
@@ -261,15 +264,12 @@ export default function SandboxPage() {
     }
   }, [loadDialogOpen]);
 
-  // Calculate visible days based on view mode
   const visibleDays = useMemo(() => {
     if (!plan) return [];
     
-    // Show a "page" of days based on view mode (7 for week, 35 for month)
     return plan.days.slice(currentStart, currentStart + pageSize);
   }, [plan, currentStart, pageSize]);
 
-  // Calculate week information
   const totalWeeks = useMemo(() => {
     if (!plan) return 0;
     return Math.ceil(plan.days.length / 7);
@@ -288,6 +288,11 @@ export default function SandboxPage() {
     setViewMode(mode);
   };
 
+  const handleViewDetails = (item: BlockItem) => {
+    setSelectedAttraction(item);
+    setDetailsModalOpen(true);
+  };
+
   const renderGridItem = (item: GridItem, day: number) => {
     if (item.type === 'activity') {
       return (
@@ -296,6 +301,7 @@ export default function SandboxPage() {
           isInPalette={false}
           gridItemId={item.id}
           onRemove={() => handleItemRemove(day, item.id)}
+          onViewDetails={() => handleViewDetails(item.item as BlockItem)}
         />
       );
     } else {
@@ -305,6 +311,7 @@ export default function SandboxPage() {
           isInPalette={false}
           gridItemId={item.id}
           onRemove={() => handleItemRemove(day, item.id)}
+          onViewDetails={() => handleViewDetails(item.item as BlockItem)}
         />
       );
     }
@@ -344,6 +351,7 @@ export default function SandboxPage() {
         <BlockPalette
           activities={sampleActivities}
           restaurants={sampleRestaurants}
+          onItemClick={handleViewDetails}
         />
 
         <div className={`flex-1 flex flex-col ${viewMode === 'month' ? 'overflow-hidden' : 'overflow-auto'}`}>
@@ -381,6 +389,11 @@ export default function SandboxPage() {
           )}
         </div>
       </div>
+      <AttractionDetailsModal
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        item={selectedAttraction}
+      />
     </div>
   );
 }
